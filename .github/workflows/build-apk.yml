@@ -17,27 +17,54 @@ jobs:
           flutter-version: '3.24.0'
           channel: 'stable'
           cache: true
-      - name: Auto Fix SDK 34
+
+      - name: Find Project - Kahan Hai?
         run: |
-          sed -i 's/compileSdkVersion 33/compileSdkVersion 34/g' android/app/build.gradle
-          sed -i 's/compileSdkVersion 31/compileSdkVersion 34/g' android/app/build.gradle
-          sed -i 's/compileSdkVersion 32/compileSdkVersion 34/g' android/app/build.gradle
-          sed -i 's/compileSdk 33/compileSdk 34/g' android/app/build.gradle
-          sed -i 's/compileSdk 31/compileSdk 34/g' android/app/build.gradle
-          sed -i 's/compileSdk 32/compileSdk 34/g' android/app/build.gradle
-          sed -i 's/flutter.compileSdkVersion/34/g' android/app/build.gradle
-          sed -i 's/targetSdkVersion 33/targetSdkVersion 34/g' android/app/build.gradle
-          sed -i 's/targetSdkVersion 31/targetSdkVersion 34/g' android/app/build.gradle
-          sed -i 's/targetSdk 33/targetSdk 34/g' android/app/build.gradle
-          sed -i 's/targetSdk 31/targetSdk 34/g' android/app/build.gradle
-          sed -i 's/flutter.targetSdkVersion/34/g' android/app/build.gradle
-          sed -i 's/minSdkVersion 16/minSdkVersion 21/g' android/app/build.gradle
-          sed -i 's/minSdk 16/minSdk 21/g' android/app/build.gradle
-          cat android/app/build.gradle | grep -i "sdk"
-      - run: flutter clean
-      - run: flutter pub get
-      - run: flutter build apk --release
+          echo "=== Kya Kya Hai? ==="
+          ls -la
+          echo "=== ZIP Hai To Kholo ==="
+          if [ -f "girl-3d.zip" ]; then
+            unzip -o girl-3d.zip
+            ls -la
+          fi
+          echo "=== build.gradle Kahan Hai? ==="
+          find . -name "build.gradle" | head -20
+          echo "=== pubspec Kahan Hai? ==="
+          find . -name "pubspec.yaml" | head -20
+
+      - name: Auto Fix SDK 34 - Jahan Bhi Ho
+        run: |
+          # Project kahan hai - Dhoondo
+          PROJECT_DIR=$(dirname $(find . -name "pubspec.yaml" | head -1))
+          echo "PROJECT_DIR=$PROJECT_DIR"
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          cd "$PROJECT_DIR"
+          ls -la
+          # Ab Fix karo
+          if [ -f "android/app/build.gradle" ]; then
+            sed -i 's/compileSdkVersion 33/compileSdkVersion 34/g' android/app/build.gradle
+            sed -i 's/compileSdkVersion 31/compileSdkVersion 34/g' android/app/build.gradle
+            sed -i 's/compileSdkVersion 32/compileSdkVersion 34/g' android/app/build.gradle
+            sed -i 's/compileSdk 33/compileSdk 34/g' android/app/build.gradle
+            sed -i 's/compileSdk 31/compileSdk 34/g' android/app/build.gradle
+            sed -i 's/compileSdk 32/compileSdk 34/g' android/app/build.gradle
+            sed -i 's/flutter.compileSdkVersion/34/g' android/app/build.gradle
+            sed -i 's/targetSdkVersion 33/targetSdkVersion 34/g' android/app/build.gradle
+            sed -i 's/targetSdkVersion 31/targetSdkVersion 34/g' android/app/build.gradle
+            sed -i 's/targetSdk 33/targetSdk 34/g' android/app/build.gradle
+            sed -i 's/targetSdk 31/targetSdk 34/g' android/app/build.gradle
+            sed -i 's/flutter.targetSdkVersion/34/g' android/app/build.gradle
+            cat android/app/build.gradle | grep -i "sdk"
+          fi
+
+      - name: Build APK
+        run: |
+          cd "${{ env.PROJECT_DIR }}"
+          flutter clean
+          flutter pub get
+          flutter build apk --release
+
       - uses: actions/upload-artifact@v4
         with:
           name: ai-girl-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: "**/build/app/outputs/flutter-apk/app-release.apk"
