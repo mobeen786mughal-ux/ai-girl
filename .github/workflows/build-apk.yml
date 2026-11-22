@@ -8,25 +8,65 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.3'
           channel: 'stable'
-      - name: Build
+          cache: true
+
+      - name: Tumhari Sari Cheezein - Full Setup
         run: |
-          if [ -f "girl-3d.zip" ]; then unzip -o girl-3d.zip; fi
+          echo "=== 1. ZIP Hai To Kholo ==="
+          ls -la
+          if [ -f "girl-3d.zip" ]; then
+            unzip -o girl-3d.zip
+            ls -la
+          fi
+          echo "=== 2. Project Kahan Hai? ==="
+          find . -name "pubspec.yaml" | head -20
           PROJECT_DIR=$(dirname $(find . -name "pubspec.yaml" | head -1))
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          echo "Project: $PROJECT_DIR"
           cd "$PROJECT_DIR"
+          echo "=== 3. Tumhari Files Check ==="
+          ls -la
+          ls -la lib/
+          ls -la assets/ || echo "assets nahi hai"
+          cat pubspec.yaml
+          echo "=== 4. Agar assets ZIP me hai to Nikalo ==="
+          if [ -f "../girl-3d.zip" ]; then
+            unzip -o -j "../girl-3d.zip" "*.glb" -d assets/ || true
+            unzip -o -j "girl-3d.zip" "*.glb" -d assets/ || true
+          fi
+          find . -name "*.glb" | head -10
+          # Agar glb kahin aur hai to assets me lao
+          mkdir -p assets
+          find . -name "*.glb" -exec cp {} assets/ \; 2>/dev/null || true
+          ls -la assets/
+          echo "=== 5. Android Naya Banao - Purana Khatam ==="
           rm -rf android ios
           flutter create . --platforms=android --org com.example --project-name ai_girl
+          echo "=== 6. Kotlin + SDK Fix - Tumhara Error wala ==="
+          sed -i "s/id \"org.jetbrains.kotlin.android\" version \".*\" apply false/id \"org.jetbrains.kotlin.android\" version \"1.9.24\" apply false/g" android/settings.gradle
+          sed -i "s/ext.kotlin_version = '.*'/ext.kotlin_version = '1.9.24'/g" android/settings.gradle
+          sed -i 's/flutter.compileSdkVersion/34/g' android/app/build.gradle
+          sed -i 's/flutter.targetSdkVersion/34/g' android/app/build.gradle
+          cat android/app/build.gradle | grep -i "sdk" || true
+
+      - name: Build APK - Tumhari Full App
+        run: |
+          cd "${{ env.PROJECT_DIR }}"
           flutter clean
           flutter pub get
+          flutter analyze || true
           flutter build apk --release
+
       - uses: actions/upload-artifact@v4
         with:
           name: ai-girl-apk
