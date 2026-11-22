@@ -1,4 +1,4 @@
-name: Build 3D Girl + AI Chat APK
+name: Build APK
 on:
   push:
     branches: [ main ]
@@ -8,40 +8,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: 'zulu'
           java-version: '17'
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.9'
+          flutter-version: '3.24.0'
           channel: 'stable'
-      - name: Create Project
+          cache: true
+      - name: Auto Fix SDK 34
         run: |
-          flutter create --project-name girl_3d --org com.girl3d . || true
-          mkdir -p assets lib
-          cp /tmp/keep_assets_girl.glb assets/girl.glb 2>/dev/null || echo "assets already have girl.glb"
-      - name: Inject GROQ Key
-        run: |
-          sed -i "s/GROQ_API_KEY_PLACEHOLDER/${{ secrets.GROQ_API_KEY }}/g" lib/groq_service.dart || true
-      - name: Setup Icon
-        run: |
-          python3 << 'PY'
-          import pathlib, shutil
-          src = pathlib.Path("assets/icon.png")
-          if src.exists():
-              for d in ["android/app/src/main/res/mipmap-hdpi","android/app/src/main/res/mipmap-mdpi","android/app/src/main/res/mipmap-xhdpi","android/app/src/main/res/mipmap-xxhdpi","android/app/src/main/res/mipmap-xxxhdpi"]:
-                  pathlib.Path(d).mkdir(parents=True, exist_ok=True)
-                  shutil.copy(str(src), f"{d}/ic_launcher.png")
-                  shutil.copy(str(src), f"{d}/ic_launcher_round.png")
-              print("Icon OK")
-          PY
-      - name: Build APK
-        run: flutter build apk --release
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+          sed -i 's/compileSdkVersion 33/compileSdkVersion 34/g' android/app/build.gradle
+          sed -i 's/compileSdkVersion 31/compileSdkVersion 34/g' android/app/build.gradle
+          sed -i 's/compileSdkVersion 32/compileSdkVersion 34/g' android/app/build.gradle
+          sed -i 's/compileSdk 33/compileSdk 34/g' android/app/build.gradle
+          sed -i 's/compileSdk 31/compileSdk 34/g' android/app/build.gradle
+          sed -i 's/compileSdk 32/compileSdk 34/g' android/app/build.gradle
+          sed -i 's/flutter.compileSdkVersion/34/g' android/app/build.gradle
+          sed -i 's/targetSdkVersion 33/targetSdkVersion 34/g' android/app/build.gradle
+          sed -i 's/targetSdkVersion 31/targetSdkVersion 34/g' android/app/build.gradle
+          sed -i 's/targetSdk 33/targetSdk 34/g' android/app/build.gradle
+          sed -i 's/targetSdk 31/targetSdk 34/g' android/app/build.gradle
+          sed -i 's/flutter.targetSdkVersion/34/g' android/app/build.gradle
+          sed -i 's/minSdkVersion 16/minSdkVersion 21/g' android/app/build.gradle
+          sed -i 's/minSdk 16/minSdk 21/g' android/app/build.gradle
+          cat android/app/build.gradle | grep -i "sdk"
+      - run: flutter clean
+      - run: flutter pub get
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
         with:
-          name: girl-3d-ai-apk
+          name: ai-girl-apk
           path: build/app/outputs/flutter-apk/app-release.apk
