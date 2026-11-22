@@ -18,44 +18,26 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Find Project - Kahan Hai?
+      - name: Auto Fix - Naya Android Folder Banao
         run: |
-          echo "=== Kya Kya Hai? ==="
           ls -la
-          echo "=== ZIP Hai To Kholo ==="
           if [ -f "girl-3d.zip" ]; then
             unzip -o girl-3d.zip
-            ls -la
           fi
-          echo "=== build.gradle Kahan Hai? ==="
-          find . -name "build.gradle" | head -20
-          echo "=== pubspec Kahan Hai? ==="
-          find . -name "pubspec.yaml" | head -20
-
-      - name: Auto Fix SDK 34 - Jahan Bhi Ho
-        run: |
-          # Project kahan hai - Dhoondo
+          # Project kahan hai?
           PROJECT_DIR=$(dirname $(find . -name "pubspec.yaml" | head -1))
-          echo "PROJECT_DIR=$PROJECT_DIR"
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          echo "Project: $PROJECT_DIR"
           cd "$PROJECT_DIR"
           ls -la
-          # Ab Fix karo
-          if [ -f "android/app/build.gradle" ]; then
-            sed -i 's/compileSdkVersion 33/compileSdkVersion 34/g' android/app/build.gradle
-            sed -i 's/compileSdkVersion 31/compileSdkVersion 34/g' android/app/build.gradle
-            sed -i 's/compileSdkVersion 32/compileSdkVersion 34/g' android/app/build.gradle
-            sed -i 's/compileSdk 33/compileSdk 34/g' android/app/build.gradle
-            sed -i 's/compileSdk 31/compileSdk 34/g' android/app/build.gradle
-            sed -i 's/compileSdk 32/compileSdk 34/g' android/app/build.gradle
-            sed -i 's/flutter.compileSdkVersion/34/g' android/app/build.gradle
-            sed -i 's/targetSdkVersion 33/targetSdkVersion 34/g' android/app/build.gradle
-            sed -i 's/targetSdkVersion 31/targetSdkVersion 34/g' android/app/build.gradle
-            sed -i 's/targetSdk 33/targetSdk 34/g' android/app/build.gradle
-            sed -i 's/targetSdk 31/targetSdk 34/g' android/app/build.gradle
-            sed -i 's/flutter.targetSdkVersion/34/g' android/app/build.gradle
-            cat android/app/build.gradle | grep -i "sdk"
-          fi
+          # Purana Android Folder Backup karke Delete karo
+          mv android android_old 2>/dev/null || true
+          mv ios ios_old 2>/dev/null || true
+          # Naya Android Folder Banao - Same Naam se
+          flutter create . --platforms=android --org com.example --project-name ai_girl || flutter create . --platforms=android
+          # Purani cheezein wapas lao - Agar thi to
+          cp -r android_old/app/src/main/AndroidManifest.xml android/app/src/main/AndroidManifest.xml 2>/dev/null || true
+          ls android/app/
 
       - name: Build APK
         run: |
