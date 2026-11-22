@@ -17,39 +17,29 @@ jobs:
           flutter-version: '3.22.3'
           channel: 'stable'
           cache: true
-
-      - name: Auto Fix - Full Fresh
+      - name: Auto Fix + Show Dart Error
         run: |
           ls -la
-          if [ -f "girl-3d.zip" ]; then
-            unzip -o girl-3d.zip
-          fi
+          if [ -f "girl-3d.zip" ]; then unzip -o girl-3d.zip; fi
           PROJECT_DIR=$(dirname $(find . -name "pubspec.yaml" | head -1))
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
-          echo "Project: $PROJECT_DIR"
           cd "$PROJECT_DIR"
-          # Purana Android hatao - Naya banao
           rm -rf android ios
           flutter create . --platforms=android --org com.example --project-name ai_girl
-          # Kotlin Fix - Sabse Zaroori!
-          echo "=== Kotlin Fix ==="
-          cat android/settings.gradle
           sed -i "s/id \"org.jetbrains.kotlin.android\" version \".*\" apply false/id \"org.jetbrains.kotlin.android\" version \"1.9.24\" apply false/g" android/settings.gradle
-          sed -i "s/ext.kotlin_version = '.*'/ext.kotlin_version = '1.9.24'/g" android/settings.gradle
-          sed -i "s/kotlin_version = '.*'/kotlin_version = '1.9.24'/g" android/build.gradle
-          grep -i kotlin android/settings.gradle || true
-          # SDK 34 Fix
           sed -i 's/flutter.compileSdkVersion/34/g' android/app/build.gradle
           sed -i 's/flutter.targetSdkVersion/34/g' android/app/build.gradle
-          cat android/app/build.gradle | grep -i "sdk"
-
-      - name: Build APK
-        run: |
-          cd "${{ env.PROJECT_DIR }}"
+          echo "=== FILES ==="
+          ls -la lib/
+          cat pubspec.yaml
+          echo "=== DART ANALYZE - Asli Error Yahan Hoga ==="
           flutter clean
           flutter pub get
-          flutter build apk --release
-
+          flutter analyze || true
+      - name: Build APK Verbose
+        run: |
+          cd "${{ env.PROJECT_DIR }}"
+          flutter build apk --release --verbose
       - uses: actions/upload-artifact@v4
         with:
           name: ai-girl-apk
