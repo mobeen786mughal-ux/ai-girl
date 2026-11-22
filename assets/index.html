@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Girl - 3D</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#000;overflow:hidden;font-family:Arial,sans-serif}
+  #bg{
+    position:fixed;inset:0;
+    background: radial-gradient(circle at 50% 30%, #2A0A1A 0%, #000 60%),
+                radial-gradient(circle at 80% 90%, #FF2E7E22 0%, transparent 50%);
+  }
+  #container{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  canvas{display:block!important}
+  #loading{
+    position:fixed;inset:0;background:#000;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;z-index:10;transition:opacity .5s;
+  }
+  .ring{width:70px;height:70px;border-radius:50%;border:3px solid #222;border-top:3px solid #FF2E7E;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #loading p{color:#FF6EB4;margin-top:18px;letter-spacing:3px;font-size:12px}
+  #loading h2{color:#fff;margin-top:10px;letter-spacing:5px}
+  #badge{
+    position:fixed;top:15px;left:15px;z-index:5;
+    background:rgba(255,46,126,.15);border:1px solid #FF2E7E;color:#FF6EB4;
+    padding:6px 12px;border-radius:20px;font-size:11px;letter-spacing:2px;backdrop-filter:blur(10px)
+  }
+  #bottom{
+    position:fixed;bottom:0;left:0;right:0;z-index:5;padding:15px;
+    background:linear-gradient(to top, rgba(0,0,0,.9), transparent);
+    text-align:center;color:#fff;font-size:12px;letter-spacing:2px
+  }
+  #bottom span{color:#FF6EB4}
+  #glow{
+    position:fixed;bottom:-60px;left:50%;transform:translateX(-50%);
+    width:300px;height:120px;background:#FF2E7E;filter:blur(80px);opacity:.25;border-radius:50%;pointer-events:none
+  }
+</style>
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div id="bg"></div>
+<div id="glow"></div>
+<div id="badge">✨ AI GIRL • PRO • LIVE</div>
+<div id="container"></div>
+
+<div id="loading">
+  <div class="ring"></div>
+  <h2>AI GIRL</h2>
+  <p>LOADING 3D MODEL...</p>
+</div>
+
+<div id="bottom">DRAG TO ROTATE • <span>PINCH TO ZOOM</span> • AUTO ROTATE ON</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const container = document.getElementById('container');
+const scene = new THREE.Scene();
+scene.background = null;
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100);
+camera.position.set(0, 1.6, 3.2);
+
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+container.appendChild(renderer.domElement);
+
+// PROFESSIONAL PINK STUDIO LIGHTS
+scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(2,4,4); scene.add(key);
+const pink = new THREE.PointLight(0xFF2E7E, 25, 10); pink.position.set(-2, 2, 2); scene.add(pink);
+const pink2 = new THREE.PointLight(0xFF6EB4, 18, 10); pink2.position.set(2, 1, -1); scene.add(pink2);
+const rim = new THREE.DirectionalLight(0xFF2E7E, 1.5); rim.position.set(0,2,-4); scene.add(rim);
+
+// FLOOR GLOW - PREMIUM
+const floorGeo = new THREE.CircleGeometry(1.4, 64);
+const floorMat = new THREE.MeshBasicMaterial({color:0xFF2E7E, transparent:true, opacity:0.18});
+const floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI/2; floor.position.y = 0; scene.add(floor);
+const ringGeo = new THREE.RingGeometry(1.35, 1.45, 64);
+const ringMat = new THREE.MeshBasicMaterial({color:0xFF2E7E, transparent:true, opacity:0.7, side:THREE.DoubleSide});
+const ring = new THREE.Mesh(ringGeo, ringMat);
+ring.rotation.x = -Math.PI/2; ring.position.y = 0.01; scene.add(ring);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.1, 0);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minDistance = 1.8;
+controls.maxDistance = 5;
+controls.maxPolarAngle = Math.PI/1.7;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 1.0;
+
+let model = null;
+const loader = new GLTFLoader();
+loader.load('girl.glb', (gltf)=>{
+  model = gltf.scene;
+  // CENTER + SCALE
+  const box = new THREE.Box3().setFromObject(model);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const scale = 2.2 / maxDim;
+  model.scale.setScalar(scale);
+  model.position.sub(center.multiplyScalar(scale));
+  model.position.y += 1.1;
+  scene.add(model);
+  document.getElementById('loading').style.opacity = '0';
+  setTimeout(()=> document.getElementById('loading').remove(), 500);
+}, undefined, (e)=>{
+  document.querySelector('#loading p').textContent = 'MODEL NOT FOUND - CHECK girl.glb';
+});
+
+function animate(){
+  requestAnimationFrame(animate);
+  if(model){
+    model.rotation.y += 0.002;
+    model.position.y = 1.1 + Math.sin(Date.now()*0.0015)*0.03;
+  }
+  ring.rotation.z += 0.005;
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
