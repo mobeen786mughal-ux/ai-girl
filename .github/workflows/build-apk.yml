@@ -16,30 +16,17 @@ jobs:
         with:
           flutter-version: '3.22.3'
           channel: 'stable'
-          cache: true
-      - name: Auto Fix + Show Dart Error
+      - name: Build
         run: |
-          ls -la
           if [ -f "girl-3d.zip" ]; then unzip -o girl-3d.zip; fi
           PROJECT_DIR=$(dirname $(find . -name "pubspec.yaml" | head -1))
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
           cd "$PROJECT_DIR"
           rm -rf android ios
           flutter create . --platforms=android --org com.example --project-name ai_girl
-          sed -i "s/id \"org.jetbrains.kotlin.android\" version \".*\" apply false/id \"org.jetbrains.kotlin.android\" version \"1.9.24\" apply false/g" android/settings.gradle
-          sed -i 's/flutter.compileSdkVersion/34/g' android/app/build.gradle
-          sed -i 's/flutter.targetSdkVersion/34/g' android/app/build.gradle
-          echo "=== FILES ==="
-          ls -la lib/
-          cat pubspec.yaml
-          echo "=== DART ANALYZE - Asli Error Yahan Hoga ==="
           flutter clean
           flutter pub get
-          flutter analyze || true
-      - name: Build APK Verbose
-        run: |
-          cd "${{ env.PROJECT_DIR }}"
-          flutter build apk --release --verbose
+          flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
           name: ai-girl-apk
