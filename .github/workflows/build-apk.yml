@@ -14,30 +14,34 @@ jobs:
           java-version: '17'
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.22.3'
           channel: 'stable'
           cache: true
 
-      - name: Auto Fix - Naya Android Folder Banao
+      - name: Auto Fix - Full Fresh
         run: |
           ls -la
           if [ -f "girl-3d.zip" ]; then
             unzip -o girl-3d.zip
           fi
-          # Project kahan hai?
           PROJECT_DIR=$(dirname $(find . -name "pubspec.yaml" | head -1))
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
           echo "Project: $PROJECT_DIR"
           cd "$PROJECT_DIR"
-          ls -la
-          # Purana Android Folder Backup karke Delete karo
-          mv android android_old 2>/dev/null || true
-          mv ios ios_old 2>/dev/null || true
-          # Naya Android Folder Banao - Same Naam se
-          flutter create . --platforms=android --org com.example --project-name ai_girl || flutter create . --platforms=android
-          # Purani cheezein wapas lao - Agar thi to
-          cp -r android_old/app/src/main/AndroidManifest.xml android/app/src/main/AndroidManifest.xml 2>/dev/null || true
-          ls android/app/
+          # Purana Android hatao - Naya banao
+          rm -rf android ios
+          flutter create . --platforms=android --org com.example --project-name ai_girl
+          # Kotlin Fix - Sabse Zaroori!
+          echo "=== Kotlin Fix ==="
+          cat android/settings.gradle
+          sed -i "s/id \"org.jetbrains.kotlin.android\" version \".*\" apply false/id \"org.jetbrains.kotlin.android\" version \"1.9.24\" apply false/g" android/settings.gradle
+          sed -i "s/ext.kotlin_version = '.*'/ext.kotlin_version = '1.9.24'/g" android/settings.gradle
+          sed -i "s/kotlin_version = '.*'/kotlin_version = '1.9.24'/g" android/build.gradle
+          grep -i kotlin android/settings.gradle || true
+          # SDK 34 Fix
+          sed -i 's/flutter.compileSdkVersion/34/g' android/app/build.gradle
+          sed -i 's/flutter.targetSdkVersion/34/g' android/app/build.gradle
+          cat android/app/build.gradle | grep -i "sdk"
 
       - name: Build APK
         run: |
